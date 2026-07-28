@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>江南三大名楼 - 长江文化地图</title>
+    <script type="text/javascript" src="https://api.tianditu.gov.cn/api?v=4.0&tk=YOUR_TIANDITU_TOKEN"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 36px;
+            background: linear-gradient(90deg, #f5a623, #e74c3c, #f5a623);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: 4px;
+        }
+        
+        .header .subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header .highlight {
+            color: #f5a623;
+            font-weight: bold;
+        }
+        
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+        
+        .map-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        #mapDiv {
+            width: 100%;
+            height: 700px;
+            border-radius: 16px;
+        }
+        
+        .control-panel {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #f5a623, #e74c3c);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 166, 35, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 166, 35, 0.6);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(245, 166, 35, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(180deg, #f5a623, #e74c3c);
+            border-radius: 2px;
+        }
+        
+        .tower-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .tower-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .tower-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+        
+        .tower-item.active {
+            border-left-color: #f5a623;
+            background: rgba(245, 166, 35, 0.1);
+        }
+        
+        .tower-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .tower-icon.hhl { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .tower-icon.twg { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .tower-icon.yyl { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        
+        .tower-info h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: #f5a623;
+        }
+        
+        .tower-info p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.5;
+        }
+        
+        .distance-info {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+        
+        .distance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+        
+        .distance-item .route {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .distance-item .km {
+            color: #f5a623;
+            font-weight: 600;
+        }
+        
+        .story-content {
+            font-size: 14px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .story-content p {
+            margin-bottom: 16px;
+            text-indent: 2em;
+        }
+        
+        .story-content .quote {
+            padding: 16px;
+            background: rgba(245, 166, 35, 0.1);
+            border-left: 4px solid #f5a623;
+            border-radius: 0 8px 8px 0;
+            text-indent: 0;
+            font-style: italic;
+            color: #f5a623;
+        }
+        
+        .tourist-source {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .source-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .source-tag {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .source-tag.hubei { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+        .source-tag.yd { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+        .source-tag.zs { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+        .source-tag.jjj { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }
+        
+        .source-desc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            flex: 1;
+        }
+        
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .legend-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .legend-line {
+            width: 30px;
+            height: 4px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #f5a623, #e74c3c, #f5a623);
+        }
+        
+        .custom-marker {
+            position: relative;
+            width: 40px;
+            height: 40px;
+        }
+        
+        .marker-pin {
+            width: 100%;
+            height: 100%;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            border: 3px solid white;
+        }
+        
+        .marker-pin span {
+            transform: rotate(45deg);
+            font-size: 18px;
+        }
+        
+        .marker-label {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 20px rgba(245, 166, 35, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 166, 35, 0);
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+            
+            #mapDiv {
+                height: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏯 江南三大名楼</h1>
+            <p class="subtitle">
+                三座楼依<span class="highlight">长江</span>而生，共同构成了<span class="highlight">长江文化</span>的视觉骨架。
+                <br>从黄鹤楼的"昔人已乘黄鹤去"，到滕王阁的"落霞与孤鹜齐飞"，再到岳阳楼的"先天下之忧而忧"——
+                <br>它们不仅是建筑的瑰宝，更是中华文化的璀璨明珠。
+            </p>
+        </div>
+        
+        <div class="content-wrapper">
+            <div class="map-container">
+                <div id="mapDiv"></div>
+                <div class="control-panel">
+                    <button class="btn btn-primary" onclick="showAllTowers()">🎯 江南三大名楼联动打卡</button>
+                    <button class="btn btn-secondary" onclick="flyToTower('hhl')">黄鹤楼</button>
+                    <button class="btn btn-secondary" onclick="flyToTower('twg')">滕王阁</button>
+                    <button class="btn btn-secondary" onclick="flyToTower('yyl')">岳阳楼</button>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="card">
+                    <div class="card-title">名楼索引</div>
+                    <div class="tower-list">
+                        <div class="tower-item active" onclick="flyToTower('hhl')" id="tower-hhl">
+                            <div class="tower-icon hhl">🐦</div>
+                            <div class="tower-info">
+                                <h3>黄鹤楼</h3>
+                                <p>湖北武汉 · 武昌区</p>
+                                <p>东经 114.30° 北纬 30.54°</p>
+                            </div>
+                        </div>
+                        <div class="tower-item" onclick="flyToTower('twg')" id="tower-twg">
+                            <div class="tower-icon twg">🦆</div>
+                            <div class="tower-info">
+                                <h3>滕王阁</h3>
+                                <p>江西南昌 · 东湖区</p>
+                                <p>东经 115.88° 北纬 28.68°</p>
+                            </div>
+                        </div>
+                        <div class="tower-item" onclick="flyToTower('yyl')" id="tower-yyl">
+                            <div class="tower-icon yyl">🌊</div>
+                            <div class="tower-info">
+                                <h3>岳阳楼</h3>
+                                <p>湖南岳阳 · 岳阳楼区</p>
+                                <p>东经 113.09° 北纬 29.38°</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">长江沿线距离</div>
+                    <div class="distance-info">
+                        <div class="distance-item">
+                            <span class="route">武汉 → 岳阳</span>
+                            <span class="km">约 200 km</span>
+                        </div>
+                        <div class="distance-item">
+                            <span class="route">武汉 → 南昌</span>
+                            <span class="km">约 260 km</span>
+                        </div>
+                        <div class="distance-item">
+                            <span class="route">岳阳 → 南昌</span>
+                            <span class="km">约 320 km</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <div class="legend-item">
+                            <div class="legend-line"></div>
+                            <span>长江文化脉络（示意弧线）</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">游客来源分析</div>
+                    <div class="tourist-source">
+                        <div class="source-item">
+                            <span class="source-tag hubei">湖北本地</span>
+                            <span class="source-desc">基础客流，周末游主力</span>
+                        </div>
+                        <div class="source-item">
+                            <span class="source-tag yd">长三角</span>
+                            <span class="source-desc">上海、江浙客源，高铁通达</span>
+                        </div>
+                        <div class="source-item">
+                            <span class="source-tag zs">珠三角</span>
+                            <span class="source-desc">广州、深圳客源，文化寻根</span>
+                        </div>
+                        <div class="source-item">
+                            <span class="source-tag jjj">京津冀</span>
+                            <span class="source-desc">北京、天津客源，全国影响力</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.8;">
+                        💡 从游客来源看，<strong style="color:#f5a623;">黄鹤楼</strong>不仅是湖北的旅游名片，
+                        更吸引了大量长三角、珠三角及京津冀地区的游客，体现了其<strong style="color:#f5a623;">全国影响力</strong>。
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">地图故事</div>
+                    <div class="story-content">
+                        <p>
+                            长江，中华民族的母亲河，自西向东奔流不息。在她的中游两岸，矗立着三座千古名楼——
+                            黄鹤楼、滕王阁、岳阳楼。它们如三颗璀璨的明珠，镶嵌在长江这条金色丝带上。
+                        </p>
+                        <div class="quote">
+                            "昔人已乘黄鹤去，此地空余黄鹤楼。" —— 崔颢《黄鹤楼》
+                        </div>
+                        <p>
+                            黄鹤楼雄踞武汉蛇山之巅，俯瞰长江东去。登楼远眺，烟波浩渺，
+                            引得无数文人墨客留下千古绝唱。
+                        </p>
+                        <div class="quote">
+                            "落霞与孤鹜齐飞，秋水共长天一色。" —— 王勃《滕王阁序》
+                        </div>
+                        <p>
+                            滕王阁屹立于南昌赣江之滨，以王勃的一篇序文名扬天下。
+                            秋日登楼，水天一色的壮美景色令人心驰神往。
+                        </p>
+                        <div class="quote">
+                            "先天下之忧而忧，后天下之乐而乐。" —— 范仲淹《岳阳楼记》
+                        </div>
+                        <p>
+                            岳阳楼矗立于岳阳洞庭湖畔，范仲淹的一篇记文使其成为
+                            "先忧后乐"精神的象征，激励着世代中华儿女。
+                        </p>
+                        <p>
+                            如今，三座名楼穿越千年时光，依然以其独特的魅力，
+                            向世界讲述着长江文化的博大精深。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var map;
+        var markers = {};
+        var yangtzeLine;
+        var distanceLabels = [];
+        
+        var towers = {
+            hhl: {
+                name: '黄鹤楼',
+                lng: 114.302528,
+                lat: 30.544615,
+                location: '湖北省武汉市武昌区',
+                poem: '昔人已乘黄鹤去，此地空余黄鹤楼。',
+                author: '—— 崔颢《黄鹤楼》',
+                color: '#e74c3c',
+                icon: '🐦'
+            },
+            twg: {
+                name: '滕王阁',
+                lng: 115.881143,
+                lat: 28.681366,
+                location: '江西省南昌市东湖区',
+                poem: '落霞与孤鹜齐飞，秋水共长天一色。',
+                author: '—— 王勃《滕王阁序》',
+                color: '#3498db',
+                icon: '🦆'
+            },
+            yyl: {
+                name: '岳阳楼',
+                lng: 113.094192,
+                lat: 29.381201,
+                location: '湖南省岳阳市岳阳楼区',
+                poem: '先天下之忧而忧，后天下之乐而乐。',
+                author: '—— 范仲淹《岳阳楼记》',
+                color: '#2ecc71',
+                icon: '🌊'
+            }
+        };
+        
+        function initMap() {
+            map = new T.Map('mapDiv');
+            map.centerAndZoom(new T.LngLat(114.5, 29.5), 7);
+            
+            map.setMapType(TMAP_NORMAL_MAP);
+            
+            addTowers();
+            drawYangtzeCurve();
+            
+            setTimeout(function() {
+                showAllTowers();
+            }, 500);
+        }
+        
+        function createMarkerHTML(tower) {
+            return `
+                <div class="custom-marker">
+                    <div class="marker-pin pulse" style="background: linear-gradient(135deg, ${tower.color}, ${adjustColor(tower.color, -30)});">
+                        <span>${tower.icon}</span>
+                    </div>
+                    <div class="marker-label">${tower.name}</div>
+                </div>
+            `;
+        }
+        
+        function adjustColor(color, amount) {
+            var num = parseInt(color.replace('#', ''), 16);
+            var r = (num >> 16) + amount;
+            var g = ((num >> 8) & 0x00FF) + amount;
+            var b = (num & 0x0000FF) + amount;
+            r = Math.max(Math.min(255, r), 0);
+            g = Math.max(Math.min(255, g), 0);
+            b = Math.max(Math.min(255, b), 0);
+            return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+        }
+        
+        function addTowers() {
+            Object.keys(towers).forEach(function(key) {
+                var tower = towers[key];
+                var position = new T.LngLat(tower.lng, tower.lat);
+                
+                var markerIcon = new T.Icon({
+                    iconUrl: createMarkerImage(tower),
+                    iconSize: new T.Point(40, 52),
+                    iconAnchor: new T.Point(20, 52)
+                });
+                
+                var marker = new T.Marker(position, {
+                    icon: markerIcon
+                });
+                
+                map.addOverLay(marker);
+                markers[key] = marker;
+                
+                var content = `
+                    <div style="padding: 8px; min-width: 260px; font-family: 'Microsoft YaHei', sans-serif;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid ${tower.color}20;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, ${tower.color}, ${adjustColor(tower.color, -30)}); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                                ${tower.icon}
+                            </div>
+                            <div>
+                                <h3 style="margin: 0; font-size: 18px; color: ${tower.color};">${tower.name}</h3>
+                                <p style="margin: 4px 0 0; font-size: 12px; color: #666;">${tower.location}</p>
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, ${tower.color}10, ${tower.color}05); padding: 12px; border-radius: 8px; border-left: 3px solid ${tower.color};">
+                            <p style="margin: 0 0 6px; font-size: 14px; color: #333; line-height: 1.6; font-style: italic;">
+                                "${tower.poem}"
+                            </p>
+                            <p style="margin: 0; font-size: 12px; color: #888; text-align: right;">${tower.author}</p>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 11px; color: #999;">
+                            📍 坐标：${tower.lng.toFixed(4)}°E, ${tower.lat.toFixed(4)}°N
+                        </div>
+                    </div>
+                `;
+                
+                marker.addEventListener('click', function() {
+                    var infoWin = new T.InfoWindow(content, {
+                        offset: new T.Point(0, -52)
+                    });
+                    marker.openInfoWindow(infoWin);
+                    highlightTower(key);
+                });
+            });
+        }
+        
+        function createMarkerImage(tower) {
+            var canvas = document.createElement('canvas');
+            canvas.width = 40;
+            canvas.height = 52;
+            var ctx = canvas.getContext('2d');
+            
+            ctx.save();
+            ctx.translate(20, 20);
+            ctx.rotate(-Math.PI / 4);
+            
+            var gradient = ctx.createLinearGradient(-20, -20, 20, 20);
+            gradient.addColorStop(0, tower.color);
+            gradient.addColorStop(1, adjustColor(tower.color, -30));
+            ctx.fillStyle = gradient;
+            
+            ctx.beginPath();
+            ctx.moveTo(0, -20);
+            ctx.lineTo(20, 0);
+            ctx.lineTo(0, 20);
+            ctx.lineTo(-20, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.restore();
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = '18px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(tower.icon, 20, 16);
+            
+            return canvas.toDataURL();
+        }
+        
+        function drawYangtzeCurve() {
+            var yyl = new T.LngLat(towers.yyl.lng, towers.yyl.lat);
+            var hhl = new T.LngLat(towers.hhl.lng, towers.hhl.lat);
+            var twg = new T.LngLat(towers.twg.lng, towers.twg.lat);
+            
+            var curvePoints1 = createBezierCurve(yyl, hhl, new T.LngLat(113.5, 30.2));
+            var curvePoints2 = createBezierCurve(hhl, twg, new T.LngLat(115.2, 29.8));
+            
+            var allPoints = curvePoints1.concat(curvePoints2.slice(1));
+            
+            yangtzeLine = new T.Polyline(allPoints, {
+                strokeColor: '#f5a623',
+                strokeWeight: 5,
+                strokeOpacity: 0.9,
+                lineStyle: 'solid'
+            });
+            map.addOverLay(yangtzeLine);
+            
+            var glowLine = new T.Polyline(allPoints, {
+                strokeColor: '#e74c3c',
+                strokeWeight: 2,
+                strokeOpacity: 0.5,
+                lineStyle: 'dashed'
+            });
+            map.addOverLay(glowLine);
+            
+            addDistanceLabel(yyl, hhl, '约 200 km', new T.LngLat(113.8, 30.0));
+            addDistanceLabel(hhl, twg, '约 260 km', new T.LngLat(115.0, 29.5));
+        }
+        
+        function createBezierCurve(start, end, control) {
+            var points = [];
+            var steps = 50;
+            
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var lng = (1 - t) * (1 - t) * start.getLng() + 2 * (1 - t) * t * control.getLng() + t * t * end.getLng();
+                var lat = (1 - t) * (1 - t) * start.getLat() + 2 * (1 - t) * t * control.getLat() + t * t * end.getLat();
+                points.push(new T.LngLat(lng, lat));
+            }
+            
+            return points;
+        }
+        
+        function addDistanceLabel(start, end, text, position) {
+            var content = `
+                <div style="
+                    background: rgba(0, 0, 0, 0.75);
+                    color: #f5a623;
+                    padding: 6px 14px;
+                    border-radius: 20px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    white-space: nowrap;
+                    border: 1px solid rgba(245, 166, 35, 0.5);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                ">
+                    🚢 ${text}
+                </div>
+            `;
+            
+            var label = new T.Label({
+                text: content,
+                position: position,
+                offset: new T.Point(-50, -10)
+            });
+            
+            map.addOverLay(label);
+            distanceLabels.push(label);
+        }
+        
+        function showAllTowers() {
+            var points = [
+                new T.LngLat(towers.hhl.lng, towers.hhl.lat),
+                new T.LngLat(towers.twg.lng, towers.twg.lat),
+                new T.LngLat(towers.yyl.lng, towers.yyl.lat)
+            ];
+            
+            var viewport = map.getViewport(points);
+            map.centerAndZoom(viewport.getCenter(), viewport.getZoom() - 0.5);
+            
+            Object.keys(markers).forEach(function(key) {
+                var marker = markers[key];
+                var tower = towers[key];
+                
+                var content = `
+                    <div style="padding: 8px; min-width: 260px; font-family: 'Microsoft YaHei', sans-serif;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid ${tower.color}20;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, ${tower.color}, ${adjustColor(tower.color, -30)}); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                                ${tower.icon}
+                            </div>
+                            <div>
+                                <h3 style="margin: 0; font-size: 18px; color: ${tower.color};">${tower.name}</h3>
+                                <p style="margin: 4px 0 0; font-size: 12px; color: #666;">${tower.location}</p>
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, ${tower.color}10, ${tower.color}05); padding: 12px; border-radius: 8px; border-left: 3px solid ${tower.color};">
+                            <p style="margin: 0 0 6px; font-size: 14px; color: #333; line-height: 1.6; font-style: italic;">
+                                "${tower.poem}"
+                            </p>
+                            <p style="margin: 0; font-size: 12px; color: #888; text-align: right;">${tower.author}</p>
+                        </div>
+                    </div>
+                `;
+                
+                var infoWin = new T.InfoWindow(content, {
+                    offset: new T.Point(0, -52)
+                });
+                marker.openInfoWindow(infoWin);
+            });
+            
+            highlightTower('all');
+        }
+        
+        function flyToTower(key) {
+            if (!towers[key]) return;
+            
+            var tower = towers[key];
+            map.centerAndZoom(new T.LngLat(tower.lng, tower.lat), 12);
+            
+            setTimeout(function() {
+                markers[key].dispatchEvent('click');
+            }, 500);
+            
+            highlightTower(key);
+        }
+        
+        function highlightTower(activeKey) {
+            document.querySelectorAll('.tower-item').forEach(function(item) {
+                item.classList.remove('active');
+            });
+            
+            if (activeKey === 'all') {
+                Object.keys(towers).forEach(function(key) {
+                    document.getElementById('tower-' + key).classList.add('active');
+                });
+            } else {
+                var elem = document.getElementById('tower-' + activeKey);
+                if (elem) elem.classList.add('active');
+            }
+        }
+        
+        window.onload = function() {
+            initMap();
+        };
+    </script>
+</body>
+</html>
