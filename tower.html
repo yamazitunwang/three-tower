@@ -3,827 +3,1357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>江南三大名楼 - 长江文化地图</title>
-    <script type="text/javascript" src="https://api.tianditu.gov.cn/api?v=4.0&tk=dbea822a976f6e9cd6dbc9cfaa06b300"></script>
+    <title>江南三大名楼 · 长江文化之旅</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="text/javascript" src="https://api.tianditu.gov.cn/api?v=4.0&tk=YOUR_TIANDITU_TOKEN"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        body {
-            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            color: #fff;
+        html, body {
+            width: 100%; height: 100%;
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f1419;
+            color: #f5f5f7;
+            overflow: hidden;
         }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
+
+        #mapDiv {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
         }
-        
-        .header {
-            text-align: center;
-            padding: 30px 0;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+
+        .overlay-top {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 64px;
+            background: linear-gradient(180deg, rgba(10,14,20,.92) 0%, rgba(10,14,20,.65) 70%, rgba(10,14,20,0) 100%);
+            z-index: 10;
+            pointer-events: none;
         }
-        
-        .header h1 {
-            font-size: 36px;
-            background: linear-gradient(90deg, #f5a623, #e74c3c, #f5a623);
+
+        .topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            z-index: 20;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            pointer-events: auto;
+        }
+
+        .brand-logo {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f5a623, #e74c3c);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 3px 12px rgba(231,76,60,.4);
+        }
+
+        .brand-text h1 {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            background: linear-gradient(90deg, #f5a623, #fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 12px;
-            letter-spacing: 4px;
         }
-        
-        .header .subtitle {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.8;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .header .highlight {
-            color: #f5a623;
-            font-weight: bold;
-        }
-        
-        .content-wrapper {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 20px;
-        }
-        
-        .map-container {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-        }
-        
-        #mapDiv {
-            width: 100%;
-            height: 700px;
-            border-radius: 16px;
-        }
-        
-        .control-panel {
-            display: flex;
-            gap: 12px;
-            padding: 16px;
-            background: rgba(0, 0, 0, 0.3);
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .btn {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
+        .brand-text p {
+            font-size: 11px;
+            color: rgba(255,255,255,.55);
             letter-spacing: 1px;
         }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #f5a623, #e74c3c);
-            color: white;
-            box-shadow: 0 4px 15px rgba(245, 166, 35, 0.4);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 166, 35, 0.6);
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-        }
-        
-        .card-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid rgba(245, 166, 35, 0.3);
+
+        .tour-progress {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            pointer-events: auto;
         }
-        
-        .card-title::before {
-            content: '';
-            width: 4px;
-            height: 20px;
-            background: linear-gradient(180deg, #f5a623, #e74c3c);
-            border-radius: 2px;
-        }
-        
-        .tower-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        
-        .tower-item {
-            display: flex;
-            gap: 16px;
-            padding: 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-left: 4px solid transparent;
-        }
-        
-        .tower-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(4px);
-        }
-        
-        .tower-item.active {
-            border-left-color: #f5a623;
-            background: rgba(245, 166, 35, 0.1);
-        }
-        
-        .tower-icon {
-            width: 48px;
-            height: 48px;
+        .dot {
+            width: 10px; height: 10px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
+            background: rgba(255,255,255,.25);
+            transition: all .3s;
+            cursor: pointer;
+        }
+        .dot.active {
+            background: #f5a623;
+            width: 28px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px #f5a623aa;
+        }
+        .dot.done { background: rgba(245,166,35,.55); }
+
+        .legend {
+            position: fixed;
+            left: 28px;
+            bottom: 28px;
+            z-index: 20;
+            background: rgba(20,26,34,.78);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,.08);
+            padding: 16px 20px;
+            border-radius: 14px;
+            min-width: 240px;
+            box-shadow: 0 10px 40px rgba(0,0,0,.45);
+        }
+        .legend h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255,255,255,.92);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+        }
+        .legend-row {
+            display: flex; align-items: center; gap: 10px;
+            margin-top: 9px;
+            font-size: 12.5px;
+            color: rgba(255,255,255,.78);
+        }
+        .legend-swatch {
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            border: 2px solid #fff;
             flex-shrink: 0;
         }
-        
-        .tower-icon.hhl { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .tower-icon.twg { background: linear-gradient(135deg, #3498db, #2980b9); }
-        .tower-icon.yyl { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-        
-        .tower-info h3 {
-            font-size: 16px;
-            margin-bottom: 4px;
-            color: #f5a623;
+        .legend-swatch.hhl { background: #e74c3c; }
+        .legend-swatch.twg { background: #3498db; }
+        .legend-swatch.yyl { background: #2ecc71; }
+        .legend-line-swatch {
+            width: 28px; height: 4px; border-radius: 2px;
+            background: linear-gradient(90deg,#f5a623,#e74c3c,#f5a623);
+            flex-shrink: 0;
         }
-        
-        .tower-info p {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.6);
-            line-height: 1.5;
-        }
-        
-        .distance-info {
-            margin-top: 12px;
+        .legend-dist {
+            margin-top: 14px;
             padding-top: 12px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            border-top: 1px dashed rgba(255,255,255,.06);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 14px;
         }
-        
-        .distance-item {
+        .legend-dist div {
+            font-size: 12px;
+            color: rgba(255,255,255,.6);
+            display: flex; justify-content: space-between;
+        }
+        .legend-dist span { color: #f5a623; font-weight: 600; }
+
+        .story-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 440px;
+            max-width: 40vw;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 15;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(245,166,35,.45) transparent;
+        }
+        .story-panel::-webkit-scrollbar { width: 6px; }
+        .story-panel::-webkit-scrollbar-track { background: transparent; }
+        .story-panel::-webkit-scrollbar-thumb {
+            background: rgba(245,166,35,.35);
+            border-radius: 3px;
+        }
+
+        .story-spacer {
+            height: 62vh;
+            width: 100%;
+        }
+        .story-spacer-sm {
+            height: 30vh;
+            width: 100%;
+        }
+
+        .chapter {
+            width: 100%;
+            padding: 0 28px 0 0;
+            scroll-margin-top: 40vh;
+        }
+
+        .chapter-card {
+            background: rgba(20,26,34,.88);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255,255,255,.07);
+            border-right: none;
+            border-radius: 18px 0 0 18px;
+            padding: 36px 38px;
+            box-shadow: -12px 0 40px rgba(0,0,0,.5);
+            transition: all .45s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .chapter-card::before {
+            content: '';
+            position: absolute;
+            right: 0; top: 0; bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, rgba(245,166,35,.1), rgba(231,76,60,.0));
+            transition: all .45s;
+        }
+        .chapter-card.active::before {
+            background: linear-gradient(180deg, #f5a623, #e74c3c);
+            box-shadow: 0 0 20px rgba(245,166,35,.6);
+            width: 5px;
+        }
+        .chapter-card.active {
+            border-color: rgba(245,166,35,.25);
+            background: rgba(22,28,38,.94);
+            transform: translateX(-6px);
+        }
+
+        .chapter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+            margin-bottom: 16px;
+        }
+        .chapter-tag.cover { background: rgba(245,166,35,.18); color: #f5a623; }
+        .chapter-tag.hhl { background: rgba(231,76,60,.18); color: #ff7a6e; }
+        .chapter-tag.yyl { background: rgba(46,204,113,.18); color: #6ee7a3; }
+        .chapter-tag.twg { background: rgba(52,152,219,.18); color: #6bc5ff; }
+        .chapter-tag.end { background: rgba(245,166,35,.18); color: #f5a623; }
+
+        .chapter-num {
+            font-size: 11px;
+            color: rgba(255,255,255,.35);
+            letter-spacing: 3px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .chapter h2 {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.3;
+            margin-bottom: 16px;
+            letter-spacing: 2px;
+        }
+        .chapter h2 .accent {
+            background: linear-gradient(90deg, #f5a623, #e74c3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .chapter .lead {
+            font-size: 15.5px;
+            line-height: 1.95;
+            color: rgba(255,255,255,.82);
+            margin-bottom: 18px;
+        }
+        .chapter .lead + .lead { margin-top: -6px; }
+
+        .quote-block {
+            position: relative;
+            margin: 22px 0;
+            padding: 20px 24px;
+            border-left: 4px solid #f5a623;
+            background: linear-gradient(90deg, rgba(245,166,35,.1), transparent);
+            border-radius: 0 10px 10px 0;
+        }
+        .quote-block p {
+            font-size: 17px;
+            font-style: italic;
+            color: #f5d5a8;
+            line-height: 1.8;
+            font-weight: 500;
+        }
+        .quote-block cite {
+            display: block;
+            margin-top: 10px;
+            font-size: 12.5px;
+            color: rgba(255,255,255,.45);
+            letter-spacing: 1px;
+            font-style: normal;
+        }
+
+        .meta-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0 6px;
+        }
+        .meta-cell {
+            padding: 12px 14px;
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.06);
+            border-radius: 10px;
+        }
+        .meta-cell .label {
+            font-size: 10.5px;
+            letter-spacing: 1.2px;
+            color: rgba(255,255,255,.4);
+            text-transform: uppercase;
+        }
+        .meta-cell .value {
+            font-size: 13.5px;
+            margin-top: 4px;
+            font-weight: 600;
+            color: rgba(255,255,255,.92);
+        }
+
+        .jump-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 22px;
+            padding: 10px 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(245,166,35,.45);
+            background: rgba(245,166,35,.1);
+            color: #f5a623;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all .3s;
+        }
+        .jump-btn:hover {
+            background: #f5a623;
+            color: #1a1a2e;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(245,166,35,.35);
+        }
+
+        .cover-title {
+            font-size: 40px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            margin: 14px 0 22px;
+            line-height: 1.2;
+        }
+        .cover-title .line1 {
+            display: block;
+            background: linear-gradient(90deg, #f5a623, #e74c3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .cover-title .line2 {
+            display: block;
+            color: rgba(255,255,255,.85);
+            font-size: 20px;
+            letter-spacing: 8px;
+            margin-top: 6px;
+            font-weight: 400;
+        }
+
+        .cover-divider {
+            width: 60px; height: 3px;
+            margin: 0 0 22px;
+            background: linear-gradient(90deg, #f5a623, transparent);
+            border-radius: 2px;
+        }
+
+        .end-graphic {
+            margin-top: 20px;
             display: flex;
             justify-content: space-between;
-            padding: 6px 0;
-            font-size: 13px;
+            gap: 10px;
         }
-        
-        .distance-item .route {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .distance-item .km {
-            color: #f5a623;
-            font-weight: 600;
-        }
-        
-        .story-content {
-            font-size: 14px;
-            line-height: 1.8;
-            color: rgba(255, 255, 255, 0.8);
-        }
-        
-        .story-content p {
-            margin-bottom: 16px;
-            text-indent: 2em;
-        }
-        
-        .story-content .quote {
-            padding: 16px;
-            background: rgba(245, 166, 35, 0.1);
-            border-left: 4px solid #f5a623;
-            border-radius: 0 8px 8px 0;
-            text-indent: 0;
-            font-style: italic;
-            color: #f5a623;
-        }
-        
-        .tourist-source {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .source-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-        }
-        
-        .source-tag {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        
-        .source-tag.hubei { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
-        .source-tag.yd { background: rgba(52, 152, 219, 0.2); color: #3498db; }
-        .source-tag.zs { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
-        .source-tag.jjj { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }
-        
-        .source-desc {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.7);
+        .end-tower {
             flex: 1;
+            text-align: center;
+            padding: 18px 8px;
+            border-radius: 12px;
+            background: rgba(255,255,255,.03);
+            border: 1px solid rgba(255,255,255,.06);
         }
-        
-        .legend {
+        .end-tower .emo { font-size: 26px; margin-bottom: 6px; }
+        .end-tower .ttl { font-size: 13px; font-weight: 700; color: #f5a623; }
+        .end-tower .sub { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 3px; }
+
+        .nav-float {
+            position: fixed;
+            right: calc(440px + 28px);
+            bottom: 28px;
+            z-index: 20;
+            display: flex;
+            gap: 10px;
+        }
+        .nav-btn {
+            width: 46px; height: 46px;
+            border-radius: 50%;
+            background: rgba(20,26,34,.85);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,.1);
+            color: rgba(255,255,255,.85);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all .3s;
+            box-shadow: 0 6px 20px rgba(0,0,0,.4);
+        }
+        .nav-btn:hover:not(:disabled) {
+            background: #f5a623;
+            color: #1a1a2e;
+            transform: translateY(-2px);
+            border-color: #f5a623;
+        }
+        .nav-btn:disabled { opacity: .35; cursor: not-allowed; }
+        .nav-btn.primary {
+            width: auto;
+            padding: 0 22px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            background: linear-gradient(135deg, #f5a623, #e74c3c);
+            color: #fff;
+            border: none;
+        }
+        .nav-btn.primary:hover {
+            box-shadow: 0 8px 26px rgba(245,166,35,.45);
+        }
+
+        .chapter-indicator {
+            position: fixed;
+            right: 456px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 18;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-        }
-        
-        .legend-item {
-            display: flex;
+            gap: 14px;
             align-items: center;
-            gap: 10px;
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.8);
         }
-        
-        .legend-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-        }
-        
-        .legend-line {
-            width: 30px;
-            height: 4px;
+        .chapter-indicator .tick {
+            width: 3px;
+            height: 26px;
             border-radius: 2px;
-            background: linear-gradient(90deg, #f5a623, #e74c3c, #f5a623);
+            background: rgba(255,255,255,.14);
+            transition: all .35s;
+            cursor: pointer;
         }
-        
-        .custom-marker {
-            position: relative;
-            width: 40px;
-            height: 40px;
+        .chapter-indicator .tick.on {
+            background: linear-gradient(180deg, #f5a623, #e74c3c);
+            height: 46px;
+            box-shadow: 0 0 14px rgba(245,166,35,.5);
         }
-        
-        .marker-pin {
-            width: 100%;
-            height: 100%;
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            border: 3px solid white;
-        }
-        
-        .marker-pin span {
-            transform: rotate(45deg);
-            font-size: 18px;
-        }
-        
-        .marker-label {
-            position: absolute;
-            bottom: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.75);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            white-space: nowrap;
-            font-weight: 600;
-        }
-        
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.7);
+        .chapter-indicator .tick.done { background: rgba(245,166,35,.45); height: 18px; }
+
+        @media (max-width: 960px) {
+            .story-panel {
+                width: 100%; max-width: 100%;
+                top: auto; bottom: 0;
+                height: 55vh;
             }
-            70% {
-                box-shadow: 0 0 0 20px rgba(245, 166, 35, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(245, 166, 35, 0);
-            }
-        }
-        
-        @media (max-width: 1024px) {
-            .content-wrapper {
-                grid-template-columns: 1fr;
-            }
-            
-            #mapDiv {
-                height: 500px;
-            }
+            .nav-float { right: 20px; bottom: calc(55vh + 20px); }
+            .chapter-indicator { display: none; }
+            .legend { max-width: calc(100% - 40px); left: 20px; bottom: calc(55vh + 20px); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🏯 江南三大名楼</h1>
-            <p class="subtitle">
-                三座楼依<span class="highlight">长江</span>而生，共同构成了<span class="highlight">长江文化</span>的视觉骨架。
-                <br>从黄鹤楼的"昔人已乘黄鹤去"，到滕王阁的"落霞与孤鹜齐飞"，再到岳阳楼的"先天下之忧而忧"——
-                <br>它们不仅是建筑的瑰宝，更是中华文化的璀璨明珠。
-            </p>
-        </div>
-        
-        <div class="content-wrapper">
-            <div class="map-container">
-                <div id="mapDiv"></div>
-                <div class="control-panel">
-                    <button class="btn btn-primary" onclick="showAllTowers()">🎯 江南三大名楼联动打卡</button>
-                    <button class="btn btn-secondary" onclick="flyToTower('hhl')">黄鹤楼</button>
-                    <button class="btn btn-secondary" onclick="flyToTower('twg')">滕王阁</button>
-                    <button class="btn btn-secondary" onclick="flyToTower('yyl')">岳阳楼</button>
-                </div>
-            </div>
-            
-            <div class="sidebar">
-                <div class="card">
-                    <div class="card-title">名楼索引</div>
-                    <div class="tower-list">
-                        <div class="tower-item active" onclick="flyToTower('hhl')" id="tower-hhl">
-                            <div class="tower-icon hhl">🐦</div>
-                            <div class="tower-info">
-                                <h3>黄鹤楼</h3>
-                                <p>湖北武汉 · 武昌区</p>
-                                <p>东经 114.30° 北纬 30.54°</p>
-                            </div>
-                        </div>
-                        <div class="tower-item" onclick="flyToTower('twg')" id="tower-twg">
-                            <div class="tower-icon twg">🦆</div>
-                            <div class="tower-info">
-                                <h3>滕王阁</h3>
-                                <p>江西南昌 · 东湖区</p>
-                                <p>东经 115.88° 北纬 28.68°</p>
-                            </div>
-                        </div>
-                        <div class="tower-item" onclick="flyToTower('yyl')" id="tower-yyl">
-                            <div class="tower-icon yyl">🌊</div>
-                            <div class="tower-info">
-                                <h3>岳阳楼</h3>
-                                <p>湖南岳阳 · 岳阳楼区</p>
-                                <p>东经 113.09° 北纬 29.38°</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-title">长江沿线距离</div>
-                    <div class="distance-info">
-                        <div class="distance-item">
-                            <span class="route">武汉 → 岳阳</span>
-                            <span class="km">约 200 km</span>
-                        </div>
-                        <div class="distance-item">
-                            <span class="route">武汉 → 南昌</span>
-                            <span class="km">约 260 km</span>
-                        </div>
-                        <div class="distance-item">
-                            <span class="route">岳阳 → 南昌</span>
-                            <span class="km">约 320 km</span>
-                        </div>
-                    </div>
-                    <div style="margin-top: 16px;">
-                        <div class="legend-item">
-                            <div class="legend-line"></div>
-                            <span>长江文化脉络（示意弧线）</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-title">游客来源分析</div>
-                    <div class="tourist-source">
-                        <div class="source-item">
-                            <span class="source-tag hubei">湖北本地</span>
-                            <span class="source-desc">基础客流，周末游主力</span>
-                        </div>
-                        <div class="source-item">
-                            <span class="source-tag yd">长三角</span>
-                            <span class="source-desc">上海、江浙客源，高铁通达</span>
-                        </div>
-                        <div class="source-item">
-                            <span class="source-tag zs">珠三角</span>
-                            <span class="source-desc">广州、深圳客源，文化寻根</span>
-                        </div>
-                        <div class="source-item">
-                            <span class="source-tag jjj">京津冀</span>
-                            <span class="source-desc">北京、天津客源，全国影响力</span>
-                        </div>
-                    </div>
-                    <div style="margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.8;">
-                        💡 从游客来源看，<strong style="color:#f5a623;">黄鹤楼</strong>不仅是湖北的旅游名片，
-                        更吸引了大量长三角、珠三角及京津冀地区的游客，体现了其<strong style="color:#f5a623;">全国影响力</strong>。
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-title">地图故事</div>
-                    <div class="story-content">
-                        <p>
-                            长江，中华民族的母亲河，自西向东奔流不息。在她的中游两岸，矗立着三座千古名楼——
-                            黄鹤楼、滕王阁、岳阳楼。它们如三颗璀璨的明珠，镶嵌在长江这条金色丝带上。
-                        </p>
-                        <div class="quote">
-                            "昔人已乘黄鹤去，此地空余黄鹤楼。" —— 崔颢《黄鹤楼》
-                        </div>
-                        <p>
-                            黄鹤楼雄踞武汉蛇山之巅，俯瞰长江东去。登楼远眺，烟波浩渺，
-                            引得无数文人墨客留下千古绝唱。
-                        </p>
-                        <div class="quote">
-                            "落霞与孤鹜齐飞，秋水共长天一色。" —— 王勃《滕王阁序》
-                        </div>
-                        <p>
-                            滕王阁屹立于南昌赣江之滨，以王勃的一篇序文名扬天下。
-                            秋日登楼，水天一色的壮美景色令人心驰神往。
-                        </p>
-                        <div class="quote">
-                            "先天下之忧而忧，后天下之乐而乐。" —— 范仲淹《岳阳楼记》
-                        </div>
-                        <p>
-                            岳阳楼矗立于岳阳洞庭湖畔，范仲淹的一篇记文使其成为
-                            "先忧后乐"精神的象征，激励着世代中华儿女。
-                        </p>
-                        <p>
-                            如今，三座名楼穿越千年时光，依然以其独特的魅力，
-                            向世界讲述着长江文化的博大精深。
-                        </p>
-                    </div>
-                </div>
+
+    <div id="mapDiv"></div>
+    <div class="overlay-top"></div>
+
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-logo">🏯</div>
+            <div class="brand-text">
+                <h1>江南三大名楼 · 长江文化之旅</h1>
+                <p>YANGTZE RIVER · CULTURAL TOUR</p>
             </div>
         </div>
+        <div class="tour-progress">
+            <div class="dot active" data-idx="0" onclick="goChapter(0)"></div>
+            <div class="dot" data-idx="1" onclick="goChapter(1)"></div>
+            <div class="dot" data-idx="2" onclick="goChapter(2)"></div>
+            <div class="dot" data-idx="3" onclick="goChapter(3)"></div>
+            <div class="dot" data-idx="4" onclick="goChapter(4)"></div>
+        </div>
+    </div>
+
+    <div class="legend">
+        <h4>📍 地图图例</h4>
+        <div class="legend-row"><div class="legend-swatch hhl"></div>黄鹤楼 · 武汉</div>
+        <div class="legend-row"><div class="legend-swatch yyl"></div>岳阳楼 · 岳阳</div>
+        <div class="legend-row"><div class="legend-swatch twg"></div>滕王阁 · 南昌</div>
+        <div class="legend-row"><div class="legend-line-swatch"></div>长江文化脉络（示意弧线）</div>
+        <div class="legend-dist">
+            <div>武汉 → 岳阳 <span>200 km</span></div>
+            <div>武汉 → 南昌 <span>260 km</span></div>
+            <div>岳阳 → 南昌 <span>320 km</span></div>
+            <div>总跨度 <span>~520 km</span></div>
+        </div>
+    </div>
+
+    <div class="chapter-indicator" id="sideTicks">
+        <div class="tick on" data-idx="0" onclick="goChapter(0)"></div>
+        <div class="tick" data-idx="1" onclick="goChapter(1)"></div>
+        <div class="tick" data-idx="2" onclick="goChapter(2)"></div>
+        <div class="tick" data-idx="3" onclick="goChapter(3)"></div>
+        <div class="tick" data-idx="4" onclick="goChapter(4)"></div>
+    </div>
+
+    <div class="story-panel" id="storyPanel">
+        <div class="story-spacer"></div>
+
+        <!-- Chapter 0 · Cover -->
+        <div class="chapter" id="ch-0">
+            <div class="chapter-card active">
+                <div class="chapter-tag cover">📖 开篇 · 序章</div>
+                <div class="cover-title">
+                    <span class="line1">依江而起</span>
+                    <span class="line2">三座名楼</span>
+                </div>
+                <div class="cover-divider"></div>
+                <p class="lead">
+                    长江，中华民族的母亲河，自西向东奔流不息。在她的中游两岸，矗立着三座千古名楼——
+                    <b style="color:#e74c3c">黄鹤楼</b>、<b style="color:#2ecc71">岳阳楼</b>、<b style="color:#3498db">滕王阁</b>。
+                </p>
+                <p class="lead">
+                    它们如三颗璀璨的明珠，镶嵌在长江这条金色丝带上，
+                    共同构成了<span style="color:#f5a623; font-weight: 700;">长江文化的视觉骨架</span>。
+                </p>
+                <button class="jump-btn" onclick="goChapter(1)">开始游览 →</button>
+            </div>
+        </div>
+
+        <div class="story-spacer-sm"></div>
+
+        <!-- Chapter 1 · 黄鹤楼 -->
+        <div class="chapter" id="ch-1">
+            <div class="chapter-card">
+                <div class="chapter-num">CHAPTER 01</div>
+                <div class="chapter-tag hhl">🐦 黄鹤楼 · 湖北武汉</div>
+                <h2>蛇山之巅 <span class="accent">俯瞰长江</span></h2>
+                <div class="quote-block">
+                    <p>昔人已乘黄鹤去，此地空余黄鹤楼。<br>黄鹤一去不复返，白云千载空悠悠。</p>
+                    <cite>—— 崔颢《黄鹤楼》</cite>
+                </div>
+                <p class="lead">
+                    黄鹤楼雄踞武汉蛇山之巅，始建于三国吴黄武二年（公元223年），
+                    是江南三大名楼之首，被誉为"天下江山第一楼"。
+                </p>
+                <p class="lead">
+                    登楼远眺，万里长江与京广铁路桥横跨南北，
+                    龟蛇两山隔江相望，晴川阁、古琴台历历在目，
+                    引得无数文人墨客留下千古绝唱。
+                </p>
+                <div class="meta-row">
+                    <div class="meta-cell"><div class="label">所在城市</div><div class="value">湖北省武汉市</div></div>
+                    <div class="meta-cell"><div class="label">始建年代</div><div class="value">公元 223 年</div></div>
+                    <div class="meta-cell"><div class="label">地理坐标</div><div class="value">114.30°E, 30.54°N</div></div>
+                    <div class="meta-cell"><div class="label">楼高层数</div><div class="value">5 层 · 高 51.4 m</div></div>
+                </div>
+                <button class="jump-btn" onclick="flyToTower('hhl')">🎯 飞到黄鹤楼</button>
+            </div>
+        </div>
+
+        <div class="story-spacer-sm"></div>
+
+        <!-- Chapter 2 · 岳阳楼 -->
+        <div class="chapter" id="ch-2">
+            <div class="chapter-card">
+                <div class="chapter-num">CHAPTER 02</div>
+                <div class="chapter-tag yyl">🌊 岳阳楼 · 湖南岳阳</div>
+                <h2>洞庭天下水 <span class="accent">岳阳天下楼</span></h2>
+                <div class="quote-block">
+                    <p>先天下之忧而忧，后天下之乐而乐。</p>
+                    <cite>—— 范仲淹《岳阳楼记》</cite>
+                </div>
+                <p class="lead">
+                    岳阳楼矗立于岳阳古城西门城墙之上，下瞰洞庭，前望君山，
+                    自古有"洞庭天下水，岳阳天下楼"之美誉。
+                </p>
+                <p class="lead">
+                    北宋范仲淹一篇《岳阳楼记》使其成为"先忧后乐"精神的象征，
+                    激励着世代中华儿女。纯木结构，楼高三层，飞檐盔顶，造型庄重浑厚。
+                </p>
+                <div class="meta-row">
+                    <div class="meta-cell"><div class="label">所在城市</div><div class="value">湖南省岳阳市</div></div>
+                    <div class="meta-cell"><div class="label">始建年代</div><div class="value">公元 220 年前后</div></div>
+                    <div class="meta-cell"><div class="label">地理坐标</div><div class="value">113.09°E, 29.38°N</div></div>
+                    <div class="meta-cell"><div class="label">特色结构</div><div class="value">盔顶 · 纯木结构</div></div>
+                </div>
+                <button class="jump-btn" onclick="flyToTower('yyl')">🎯 飞到岳阳楼</button>
+            </div>
+        </div>
+
+        <div class="story-spacer-sm"></div>
+
+        <!-- Chapter 3 · 滕王阁 -->
+        <div class="chapter" id="ch-3">
+            <div class="chapter-card">
+                <div class="chapter-num">CHAPTER 03</div>
+                <div class="chapter-tag twg">🦆 滕王阁 · 江西南昌</div>
+                <h2>落霞与孤鹜齐飞 <span class="accent">秋水共长天一色</span></h2>
+                <div class="quote-block">
+                    <p>潦水尽而寒潭清，烟光凝而暮山紫。<br>层峦耸翠，上出重霄；飞阁流丹，下临无地。</p>
+                    <cite>—— 王勃《滕王阁序》</cite>
+                </div>
+                <p class="lead">
+                    滕王阁屹立于南昌赣江之滨、抚河故道之畔，
+                    由唐高祖李渊之子李元婴任洪州都督时始建。
+                </p>
+                <p class="lead">
+                    因初唐诗人王勃一篇《滕王阁序》名扬天下，
+                    与湖北黄鹤楼、湖南岳阳楼并称为"江南三大名楼"。
+                    秋日登楼，水天一色的壮美景色令人心驰神往。
+                </p>
+                <div class="meta-row">
+                    <div class="meta-cell"><div class="label">所在城市</div><div class="value">江西省南昌市</div></div>
+                    <div class="meta-cell"><div class="label">始建年代</div><div class="value">唐永徽四年</div></div>
+                    <div class="meta-cell"><div class="label">地理坐标</div><div class="value">115.88°E, 28.68°N</div></div>
+                    <div class="meta-cell"><div class="label">楼高层数</div><div class="value">明三暗七 · 高 57.5 m</div></div>
+                </div>
+                <button class="jump-btn" onclick="flyToTower('twg')">🎯 飞到滕王阁</button>
+            </div>
+        </div>
+
+        <div class="story-spacer-sm"></div>
+
+        <!-- Chapter 4 · 结尾 -->
+        <div class="chapter" id="ch-4">
+            <div class="chapter-card">
+                <div class="chapter-tag end">✦ 终章 · 文化同框</div>
+                <h2>三三楼联动 <span class="accent">共绘长江</span></h2>
+                <p class="lead">
+                    从武汉到岳阳约 <b style="color:#f5a623">200 公里</b>，
+                    从武汉到南昌约 <b style="color:#f5a623">260 公里</b>，
+                    三座名楼沿长江一线铺开，共同构成一条金色的文化走廊。
+                </p>
+                <p class="lead">
+                    它们或记战乱、或记仕途、或记忧乐，
+                    却无一不与江水共进退，与时代共呼吸。
+                    楼因江而雄伟，江因楼而厚重。
+                </p>
+
+                <div class="end-graphic">
+                    <div class="end-tower">
+                        <div class="emo">🐦</div>
+                        <div class="ttl">黄鹤楼</div>
+                        <div class="sub">天下江山第一楼</div>
+                    </div>
+                    <div class="end-tower">
+                        <div class="emo">🌊</div>
+                        <div class="ttl">岳阳楼</div>
+                        <div class="sub">先忧后乐精神</div>
+                    </div>
+                    <div class="end-tower">
+                        <div class="emo">🦆</div>
+                        <div class="ttl">滕王阁</div>
+                        <div class="sub">落霞孤鹜齐飞</div>
+                    </div>
+                </div>
+
+                <div class="quote-block" style="margin-top: 26px;">
+                    <p>滚滚长江东逝水，浪花淘尽英雄。<br>是非成败转头空，青山依旧在，几度夕阳红。</p>
+                    <cite>—— 杨慎《临江仙》</cite>
+                </div>
+
+                <p class="lead" style="margin-top: 14px;">
+                    如今，三座名楼穿越千年时光，依然以其独特的魅力，
+                    向世界讲述着<span style="color:#f5a623; font-weight: 700;">长江文化的博大精深</span>。
+                </p>
+
+                <button class="jump-btn" onclick="showAllTowers()">🎯 联动打卡 · 同框三大名楼</button>
+                <button class="jump-btn" style="margin-left: 10px; border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.05); color: rgba(255,255,255,.7);" onclick="goChapter(0)">↺ 重新游览</button>
+            </div>
+        </div>
+
+        <div class="story-spacer"></div>
+    </div>
+
+    <div class="nav-float">
+        <button class="nav-btn" id="prevBtn" onclick="prevChapter()" disabled>‹</button>
+        <button class="nav-btn primary" id="nextBtn" onclick="nextChapter()">下一章 ›</button>
     </div>
 
     <script>
         var map;
         var markers = {};
+        var infoWindows = {};
         var yangtzeLine;
-        var distanceLabels = [];
-        
+        var currentChapter = 0;
+        var totalChapters = 5;
+        var scrollLock = false;
+
         var towers = {
-            hhl: {
-                name: '黄鹤楼',
-                lng: 114.302528,
-                lat: 30.544615,
-                location: '湖北省武汉市武昌区',
-                poem: '昔人已乘黄鹤去，此地空余黄鹤楼。',
-                author: '—— 崔颢《黄鹤楼》',
-                color: '#e74c3c',
-                icon: '🐦'
-            },
-            twg: {
-                name: '滕王阁',
-                lng: 115.881143,
-                lat: 28.681366,
-                location: '江西省南昌市东湖区',
-                poem: '落霞与孤鹜齐飞，秋水共长天一色。',
-                author: '—— 王勃《滕王阁序》',
-                color: '#3498db',
-                icon: '🦆'
-            },
-            yyl: {
-                name: '岳阳楼',
-                lng: 113.094192,
-                lat: 29.381201,
-                location: '湖南省岳阳市岳阳楼区',
-                poem: '先天下之忧而忧，后天下之乐而乐。',
-                author: '—— 范仲淹《岳阳楼记》',
-                color: '#2ecc71',
-                icon: '🌊'
-            }
+            hhl: { name:'黄鹤楼', lng: 114.302528, lat: 30.544615, location:'湖北省武汉市武昌区',
+                   poem:'昔人已乘黄鹤去，此地空余黄鹤楼。', author:'—— 崔颢《黄鹤楼》',
+                   color:'#e74c3c' },
+            yyl: { name:'岳阳楼', lng: 113.094192, lat: 29.381201, location:'湖南省岳阳市岳阳楼区',
+                   poem:'先天下之忧而忧，后天下之乐而乐。', author:'—— 范仲淹《岳阳楼记》',
+                   color:'#2ecc71' },
+            twg: { name:'滕王阁', lng: 115.881143, lat: 28.681366, location:'江西省南昌市东湖区',
+                   poem:'落霞与孤鹜齐飞，秋水共长天一色。', author:'—— 王勃《滕王阁序》',
+                   color:'#3498db' }
         };
-        
+
+        var chapters = [
+            { key: 'cover', fly: function(){ showAllTowers(true); } },
+            { key: 'hhl',   fly: function(){ flyToTower('hhl', true); } },
+            { key: 'yyl',   fly: function(){ flyToTower('yyl', true); } },
+            { key: 'twg',   fly: function(){ flyToTower('twg', true); } },
+            { key: 'end',   fly: function(){ showAllTowers(true); } }
+        ];
+
+        function adjustColor(color, amount) {
+            var num = parseInt(color.replace('#',''),16);
+            var r = (num>>16)+amount, g = ((num>>8)&0x00FF)+amount, b = (num&0x0000FF)+amount;
+            r = Math.max(Math.min(255,r),0); g = Math.max(Math.min(255,g),0); b = Math.max(Math.min(255,b),0);
+            return '#' + (0x1000000 + r*0x10000 + g*0x100 + b).toString(16).slice(1);
+        }
+
+        function utf8_to_b64(str) { return btoa(unescape(encodeURIComponent(str))); }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x+r, y); ctx.arcTo(x+w,y,x+w,y+h,r);
+            ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r);
+            ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+        }
+
+        function makePngIcon(tower) {
+            var canvas = document.createElement('canvas');
+            canvas.width = 80; canvas.height = 116;
+            var ctx = canvas.getContext('2d');
+            ctx.save();
+            ctx.translate(40, 40); ctx.rotate(-Math.PI/4);
+            var grd = ctx.createLinearGradient(-36,-36,36,36);
+            grd.addColorStop(0, tower.color); grd.addColorStop(1, adjustColor(tower.color, -40));
+            ctx.fillStyle = grd;
+            ctx.beginPath();
+            ctx.moveTo(0,-36); ctx.lineTo(36,0); ctx.lineTo(0,36); ctx.lineTo(-36,0);
+            ctx.closePath(); ctx.fill();
+            ctx.lineWidth = 5; ctx.strokeStyle = '#fff'; ctx.stroke();
+            ctx.restore();
+            ctx.fillStyle = 'rgba(255,255,255,.22)';
+            ctx.beginPath(); ctx.arc(40,36,18,0,Math.PI*2); ctx.fill();
+            ctx.font = 'bold 34px "Microsoft YaHei", sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#fff';
+            ctx.fillText(tower.name.charAt(0), 40, 37);
+            ctx.fillStyle = 'rgba(0,0,0,.88)';
+            roundRect(ctx, 4, 72, 72, 38, 10); ctx.fill();
+            ctx.lineWidth = 2; ctx.strokeStyle = tower.color; ctx.stroke();
+            ctx.font = 'bold 22px "Microsoft YaHei", SimHei, sans-serif';
+            ctx.fillStyle = '#fff';
+            ctx.fillText(tower.name, 40, 95);
+            return canvas.toDataURL('image/png');
+        }
+
+        function makeDistancePng(text) {
+            var w = 264, h = 76;
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            var ctx = canvas.getContext('2d');
+            roundRect(ctx, 2, 2, w-4, h-4, 36);
+            ctx.fillStyle = 'rgba(0,0,0,.85)'; ctx.fill();
+            ctx.lineWidth = 3; ctx.strokeStyle = '#f5a623'; ctx.stroke();
+            ctx.font = 'bold 26px "Microsoft YaHei", SimHei, sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#f5a623';
+            ctx.fillText('🚢 ' + text, w/2, h/2 + 2);
+            return canvas.toDataURL('image/png');
+        }
+
         function initMap() {
             map = new T.Map('mapDiv');
             map.centerAndZoom(new T.LngLat(114.5, 29.5), 7);
-            
-            map.setMapType(TMAP_NORMAL_MAP);
-            
+
             addTowers();
             drawYangtzeCurve();
-            
-            setTimeout(function() {
-                showAllTowers();
-            }, 500);
+            addDistanceMarkers();
+
+            setTimeout(function(){ chapters[0].fly(); }, 600);
+            bindScroll();
         }
-        
-        function createMarkerHTML(tower) {
-            return `
-                <div class="custom-marker">
-                    <div class="marker-pin pulse" style="background: linear-gradient(135deg, ${tower.color}, ${adjustColor(tower.color, -30)});">
-                        <span>${tower.icon}</span>
-                    </div>
-                    <div class="marker-label">${tower.name}</div>
-                </div>
-            `;
+
+        function getInfoContent(key) {
+            var t = towers[key];
+            return '<div style="padding:4px 8px 12px 8px; min-width:270px; font-family:Microsoft YaHei, sans-serif;">'
+                +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid '+t.color+'30;">'
+                    +'<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,'+t.color+','+adjustColor(t.color,-30)+');display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 8px '+t.color+'50;">'
+                    +(key==='hhl'?'🐦':(key==='yyl'?'🌊':'🦆'))+'</div>'
+                    +'<div><h3 style="margin:0;font-size:19px;color:'+t.color+';letter-spacing:1px;">'+t.name+'</h3>'
+                    +'<p style="margin:4px 0 0;font-size:12px;color:#888;">📍 '+t.location+'</p></div></div>'
+                +'<div style="background:'+t.color+'10;padding:12px 14px;border-radius:10px;border-left:4px solid '+t.color+';">'
+                    +'<p style="margin:0 0 8px;font-size:14px;color:#333;line-height:1.7;font-style:italic;">"'+t.poem+'"</p>'
+                    +'<p style="margin:0;font-size:12px;color:#999;text-align:right;">'+t.author+'</p></div>'
+                +'<div style="margin-top:12px;font-size:11px;color:#aaa;letter-spacing:.5px;">坐标：'+t.lng.toFixed(4)+'°E, '+t.lat.toFixed(4)+'°N</div>'
+                +'</div>';
         }
-        
-        function adjustColor(color, amount) {
-            var num = parseInt(color.replace('#', ''), 16);
-            var r = (num >> 16) + amount;
-            var g = ((num >> 8) & 0x00FF) + amount;
-            var b = (num & 0x0000FF) + amount;
-            r = Math.max(Math.min(255, r), 0);
-            g = Math.max(Math.min(255, g), 0);
-            b = Math.max(Math.min(255, b), 0);
-            return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
-        }
-        
+
         function addTowers() {
             Object.keys(towers).forEach(function(key) {
-                var tower = towers[key];
-                var position = new T.LngLat(tower.lng, tower.lat);
-                
-                var markerIcon = new T.Icon({
-                    iconUrl: createMarkerImage(tower),
-                    iconSize: new T.Point(40, 52),
-                    iconAnchor: new T.Point(20, 52)
-                });
-                
-                var marker = new T.Marker(position, {
-                    icon: markerIcon
-                });
-                
+                var t = towers[key];
+                var pos = new T.LngLat(t.lng, t.lat);
+                var icon = new T.Icon({ iconUrl: makePngIcon(t), iconSize: new T.Point(40,58), iconAnchor: new T.Point(20,58) });
+                var marker = new T.Marker(pos, { icon: icon });
                 map.addOverLay(marker);
                 markers[key] = marker;
-                
-                var content = `
-                    <div style="padding: 8px; min-width: 260px; font-family: 'Microsoft YaHei', sans-serif;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid ${tower.color}20;">
-                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, ${tower.color}, ${adjustColor(tower.color, -30)}); display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                                ${tower.icon}
-                            </div>
-                            <div>
-                                <h3 style="margin: 0; font-size: 18px; color: ${tower.color};">${tower.name}</h3>
-                                <p style="margin: 4px 0 0; font-size: 12px; color: #666;">${tower.location}</p>
-                            </div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, ${tower.color}10, ${tower.color}05); padding: 12px; border-radius: 8px; border-left: 3px solid ${tower.color};">
-                            <p style="margin: 0 0 6px; font-size: 14px; color: #333; line-height: 1.6; font-style: italic;">
-                                "${tower.poem}"
-                            </p>
-                            <p style="margin: 0; font-size: 12px; color: #888; text-align: right;">${tower.author}</p>
-                        </div>
-                        <div style="margin-top: 10px; font-size: 11px; color: #999;">
-                            📍 坐标：${tower.lng.toFixed(4)}°E, ${tower.lat.toFixed(4)}°N
-                        </div>
-                    </div>
-                `;
-                
+                var infoWin = new T.InfoWindow(getInfoContent(key), { offset: new T.Point(0,-58) });
+                infoWindows[key] = infoWin;
                 marker.addEventListener('click', function() {
-                    var infoWin = new T.InfoWindow(content, {
-                        offset: new T.Point(0, -52)
-                    });
+                    closeAllInfoWindows();
                     marker.openInfoWindow(infoWin);
-                    highlightTower(key);
                 });
             });
         }
-        
-        function createMarkerImage(tower) {
-            var canvas = document.createElement('canvas');
-            canvas.width = 40;
-            canvas.height = 52;
-            var ctx = canvas.getContext('2d');
-            
-            ctx.save();
-            ctx.translate(20, 20);
-            ctx.rotate(-Math.PI / 4);
-            
-            var gradient = ctx.createLinearGradient(-20, -20, 20, 20);
-            gradient.addColorStop(0, tower.color);
-            gradient.addColorStop(1, adjustColor(tower.color, -30));
-            ctx.fillStyle = gradient;
-            
-            ctx.beginPath();
-            ctx.moveTo(0, -20);
-            ctx.lineTo(20, 0);
-            ctx.lineTo(0, 20);
-            ctx.lineTo(-20, 0);
-            ctx.closePath();
-            ctx.fill();
-            
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            ctx.restore();
-            
-            ctx.fillStyle = '#fff';
-            ctx.font = '18px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(tower.icon, 20, 16);
-            
-            return canvas.toDataURL();
+
+        function closeAllInfoWindows() {
+            Object.keys(markers).forEach(function(k){ markers[k].closeInfoWindow(); });
         }
-        
+
+        function createBezierCurve(start, end, control) {
+            var pts = [], steps = 60;
+            for (var i = 0; i <= steps; i++) {
+                var t = i/steps;
+                var lng = (1-t)*(1-t)*start.getLng() + 2*(1-t)*t*control.getLng() + t*t*end.getLng();
+                var lat = (1-t)*(1-t)*start.getLat() + 2*(1-t)*t*control.getLat() + t*t*end.getLat();
+                pts.push(new T.LngLat(lng, lat));
+            }
+            return pts;
+        }
+
         function drawYangtzeCurve() {
             var yyl = new T.LngLat(towers.yyl.lng, towers.yyl.lat);
             var hhl = new T.LngLat(towers.hhl.lng, towers.hhl.lat);
             var twg = new T.LngLat(towers.twg.lng, towers.twg.lat);
-            
-            var curvePoints1 = createBezierCurve(yyl, hhl, new T.LngLat(113.5, 30.2));
-            var curvePoints2 = createBezierCurve(hhl, twg, new T.LngLat(115.2, 29.8));
-            
-            var allPoints = curvePoints1.concat(curvePoints2.slice(1));
-            
-            yangtzeLine = new T.Polyline(allPoints, {
-                strokeColor: '#f5a623',
-                strokeWeight: 5,
-                strokeOpacity: 0.9,
-                lineStyle: 'solid'
+            var c1 = createBezierCurve(yyl, hhl, new T.LngLat(113.6, 30.3));
+            var c2 = createBezierCurve(hhl, twg, new T.LngLat(115.3, 29.9));
+            var all = c1.concat(c2.slice(1));
+
+            var bg = new T.Polyline(all, {
+                strokeColor:'#f5a623', color:'#f5a623',
+                strokeWeight:10, weight:10,
+                strokeOpacity:0.2, opacity:0.2,
+                lineStyle:'solid', lineType:0
+            });
+            map.addOverLay(bg);
+
+            yangtzeLine = new T.Polyline(all, {
+                strokeColor:'#f5a623', color:'#f5a623',
+                strokeWeight:5, weight:5,
+                strokeOpacity:0.95, opacity:0.95,
+                lineStyle:'solid', lineType:0
             });
             map.addOverLay(yangtzeLine);
-            
-            var glowLine = new T.Polyline(allPoints, {
-                strokeColor: '#e74c3c',
-                strokeWeight: 2,
-                strokeOpacity: 0.5,
-                lineStyle: 'dashed'
+
+            var dash = new T.Polyline(all, {
+                strokeColor:'#e74c3c', color:'#e74c3c',
+                strokeWeight:2, weight:2,
+                strokeOpacity:0.6, opacity:0.6,
+                lineStyle:1, lineType:1
             });
-            map.addOverLay(glowLine);
-            
-            addDistanceLabel(yyl, hhl, '约 200 km', new T.LngLat(113.8, 30.0));
-            addDistanceLabel(hhl, twg, '约 260 km', new T.LngLat(115.0, 29.5));
+            map.addOverLay(dash);
         }
-        
-        function createBezierCurve(start, end, control) {
-            var points = [];
-            var steps = 50;
-            
-            for (var i = 0; i <= steps; i++) {
-                var t = i / steps;
-                var lng = (1 - t) * (1 - t) * start.getLng() + 2 * (1 - t) * t * control.getLng() + t * t * end.getLng();
-                var lat = (1 - t) * (1 - t) * start.getLat() + 2 * (1 - t) * t * control.getLat() + t * t * end.getLat();
-                points.push(new T.LngLat(lng, lat));
-            }
-            
-            return points;
-        }
-        
-        function addDistanceLabel(start, end, text, position) {
-            var content = `
-                <div style="
-                    background: rgba(0, 0, 0, 0.75);
-                    color: #f5a623;
-                    padding: 6px 14px;
-                    border-radius: 20px;
-                    font-size: 13px;
-                    font-weight: 600;
-                    white-space: nowrap;
-                    border: 1px solid rgba(245, 166, 35, 0.5);
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-                ">
-                    🚢 ${text}
-                </div>
-            `;
-            
-            var label = new T.Label({
-                text: content,
-                position: position,
-                offset: new T.Point(-50, -10)
+
+        function addDistanceMarkers() {
+            [{pos: new T.LngLat(113.85,30.05), text:'约 200 km'},
+             {pos: new T.LngLat(115.10,29.55), text:'约 260 km'}].forEach(function(it){
+                var icon = new T.Icon({ iconUrl: makeDistancePng(it.text),
+                    iconSize: new T.Point(132,38), iconAnchor: new T.Point(66,19) });
+                map.addOverLay(new T.Marker(it.pos, { icon: icon }));
             });
-            
-            map.addOverLay(label);
-            distanceLabels.push(label);
         }
-        
-        function showAllTowers() {
-            var points = [
-                new T.LngLat(towers.hhl.lng, towers.hhl.lat),
-                new T.LngLat(towers.twg.lng, towers.twg.lat),
-                new T.LngLat(towers.yyl.lng, towers.yyl.lat)
-            ];
-            
-            var viewport = map.getViewport(points);
-            map.centerAndZoom(viewport.getCenter(), viewport.getZoom() - 0.5);
-            
-            Object.keys(markers).forEach(function(key) {
-                var marker = markers[key];
-                var tower = towers[key];
-                
-                var content = `
-                    <div style="padding: 8px; min-width: 260px; font-family: 'Microsoft YaHei', sans-serif;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid ${tower.color}20;">
-                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, ${tower.color}, ${adjustColor(tower.color, -30)}); display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                                ${tower.icon}
-                            </div>
-                            <div>
-                                <h3 style="margin: 0; font-size: 18px; color: ${tower.color};">${tower.name}</h3>
-                                <p style="margin: 4px 0 0; font-size: 12px; color: #666;">${tower.location}</p>
-                            </div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, ${tower.color}10, ${tower.color}05); padding: 12px; border-radius: 8px; border-left: 3px solid ${tower.color};">
-                            <p style="margin: 0 0 6px; font-size: 14px; color: #333; line-height: 1.6; font-style: italic;">
-                                "${tower.poem}"
-                            </p>
-                            <p style="margin: 0; font-size: 12px; color: #888; text-align: right;">${tower.author}</p>
-                        </div>
-                    </div>
-                `;
-                
-                var infoWin = new T.InfoWindow(content, {
-                    offset: new T.Point(0, -52)
-                });
-                marker.openInfoWindow(infoWin);
-            });
-            
-            highlightTower('all');
+
+        function showAllTowers(silent) {
+            var pts = Object.values(towers).map(function(t){ return new T.LngLat(t.lng, t.lat); });
+            var minLng = Math.min.apply(null, pts.map(function(p){return p.getLng();}));
+            var maxLng = Math.max.apply(null, pts.map(function(p){return p.getLng();}));
+            var minLat = Math.min.apply(null, pts.map(function(p){return p.getLat();}));
+            var maxLat = Math.max.apply(null, pts.map(function(p){return p.getLat();}));
+            var cLng = (minLng+maxLng)/2, cLat = (minLat+maxLat)/2;
+            var span = Math.max(maxLng-minLng, maxLat-minLat)*1.3;
+            var zoom = Math.round(8 - Math.log(span)/Math.log(2));
+            zoom = Math.max(6, Math.min(10, zoom));
+            map.centerAndZoom(new T.LngLat(cLng, cLat), zoom);
+            setTimeout(function(){
+                Object.keys(markers).forEach(function(k){ markers[k].openInfoWindow(infoWindows[k]); });
+            }, 450);
+            if (!silent) setActiveChapter(4);
         }
-        
-        function flyToTower(key) {
+
+        function flyToTower(key, silent) {
             if (!towers[key]) return;
-            
-            var tower = towers[key];
-            map.centerAndZoom(new T.LngLat(tower.lng, tower.lat), 12);
-            
-            setTimeout(function() {
-                markers[key].dispatchEvent('click');
-            }, 500);
-            
-            highlightTower(key);
-        }
-        
-        function highlightTower(activeKey) {
-            document.querySelectorAll('.tower-item').forEach(function(item) {
-                item.classList.remove('active');
-            });
-            
-            if (activeKey === 'all') {
-                Object.keys(towers).forEach(function(key) {
-                    document.getElementById('tower-' + key).classList.add('active');
-                });
-            } else {
-                var elem = document.getElementById('tower-' + activeKey);
-                if (elem) elem.classList.add('active');
+            closeAllInfoWindows();
+            var t = towers[key];
+            map.centerAndZoom(new T.LngLat(t.lng, t.lat), 12);
+            setTimeout(function(){
+                markers[key].openInfoWindow(infoWindows[key]);
+            }, 550);
+            if (!silent) {
+                var idx = {hhl:1, yyl:2, twg:3}[key];
+                if (idx !== undefined) setActiveChapter(idx);
             }
         }
-        
-        window.onload = function() {
-            initMap();
-        };
+
+        /* ===== Chapter Scroll Logic ===== */
+        function setActiveChapter(idx) {
+            if (idx < 0 || idx >= totalChapters) return;
+            currentChapter = idx;
+            document.querySelectorAll('.chapter-card').forEach(function(c, i){
+                c.classList.toggle('active', i === idx);
+            });
+            document.querySelectorAll('.tour-progress .dot').forEach(function(d, i){
+                d.classList.toggle('active', i === idx);
+                d.classList.toggle('done', i < idx);
+            });
+            document.querySelectorAll('#sideTicks .tick').forEach(function(t, i){
+                t.classList.toggle('on', i === idx);
+                t.classList.toggle('done', i < idx);
+            });
+            document.getElementById('prevBtn').disabled = (idx === 0);
+            document.getElementById('nextBtn').textContent = (idx === totalChapters-1) ? '↺ 重新游览' : '下一章 ›';
+        }
+
+        function goChapter(idx) {
+            scrollLock = true;
+            setActiveChapter(idx);
+            var card = document.getElementById('ch-' + idx);
+            if (card) {
+                var panel = document.getElementById('storyPanel');
+                panel.scrollTo({ top: card.offsetTop - panel.clientHeight * 0.4, behavior: 'smooth' });
+            }
+            chapters[idx].fly();
+            setTimeout(function(){ scrollLock = false; }, 900);
+        }
+
+        function prevChapter() { goChapter(Math.max(0, currentChapter - 1)); }
+        function nextChapter() {
+            if (currentChapter === totalChapters - 1) { goChapter(0); return; }
+            goChapter(currentChapter + 1);
+        }
+
+        function bindScroll() {
+            var panel = document.getElementById('storyPanel');
+            var cards = document.querySelectorAll('.chapter');
+            var debounce;
+            panel.addEventListener('scroll', function() {
+                if (scrollLock) return;
+                clearTimeout(debounce);
+                debounce = setTimeout(function() {
+                    var centerY = panel.scrollTop + panel.clientHeight * 0.45;
+                    var best = 0, bestDist = Infinity;
+                    cards.forEach(function(c, i) {
+                        var top = c.offsetTop;
+                        var mid = top + c.offsetHeight / 2;
+                        var d = Math.abs(mid - centerY);
+                        if (d < bestDist) { bestDist = d; best = i; }
+                    });
+                    if (best !== currentChapter) {
+                        setActiveChapter(best);
+                        chapters[best].fly();
+                    }
+                }, 120);
+            });
+        }
+
+        /* ===== 切换按钮 ===== */
+        function addBasemapSwitcher() {
+            if (document.getElementById('basemapSwitcherWrap')) return;
+            var wrap = document.createElement('div');
+            wrap.id = 'basemapSwitcherWrap';
+            wrap.style.cssText = 'position:fixed;top:68px;left:28px;z-index:30;display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width: calc(100vw - 520px);';
+            wrap.innerHTML =
+                '<div id="mapModeBadge" style="padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:1px;background:rgba(20,26,34,.85);backdrop-filter:blur(14px);border:1px solid rgba(245,166,35,.45);color:#f5a623;box-shadow:0 6px 18px rgba(0,0,0,.45);white-space:nowrap;">🗺️ 底图模式检测中…</div>' +
+                '<div id="btnGroup" style="display:none;flex-wrap:wrap;gap:6px;">' +
+                  '<button data-k="vec" class="swbtn" style="padding:6px 12px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.15);background:rgba(20,26,34,.85);backdrop-filter:blur(14px);color:#fff;cursor:pointer;">天地图·矢量</button>' +
+                  '<button data-k="img" class="swbtn" style="padding:6px 12px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.15);background:rgba(20,26,34,.85);backdrop-filter:blur(14px);color:#fff;cursor:pointer;">天地图·影像</button>' +
+                  '<button data-k="ter" class="swbtn" style="padding:6px 12px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.15);background:rgba(20,26,34,.85);backdrop-filter:blur(14px);color:#fff;cursor:pointer;">天地图·地形</button>' +
+                  '<button data-k="amapVec" class="swbtn" style="padding:6px 12px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.15);background:rgba(20,26,34,.85);backdrop-filter:blur(14px);color:#fff;cursor:pointer;">高德·矢量</button>' +
+                  '<button data-k="amapImg" class="swbtn" style="padding:6px 12px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.15);background:rgba(20,26,34,.85);backdrop-filter:blur(14px);color:#fff;cursor:pointer;">高德·卫星</button>' +
+                  '<button data-k="osm" class="swbtn" style="padding:6px 12px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.15);background:rgba(20,26,34,.85);backdrop-filter:blur(14px);color:#fff;cursor:pointer;">OSM 通用</button>' +
+                '</div>';
+            document.body.appendChild(wrap);
+        }
+
+        function setBadge(text, color) {
+            var b = document.getElementById('mapModeBadge');
+            if (!b) return;
+            b.textContent = text;
+            if (color) { b.style.color = color; b.style.borderColor = color + 'aa'; }
+        }
+
+        function showSwitches() {
+            var g = document.getElementById('btnGroup');
+            if (g) g.style.display = 'inline-flex';
+        }
+        function styleActiveSwitch(activeKey) {
+            var labelMap = { vec:'天地图·矢量', img:'天地图·影像', ter:'天地图·地形', osm:'OSM 通用', amapVec:'高德·矢量', amapImg:'高德·卫星' };
+            var btns = document.querySelectorAll('.swbtn');
+            btns.forEach(function(b){
+                var on = (b.getAttribute('data-k') === activeKey);
+                b.style.borderColor = on ? '#f5a623' : 'rgba(255,255,255,.15)';
+                b.style.color = on ? '#f5a623' : '#fff';
+                b.style.fontWeight = on ? '700' : '500';
+            });
+            var badge = document.getElementById('mapModeBadge');
+            if (badge && labelMap[activeKey] && badge.textContent.indexOf('Token')<0) {
+                badge.textContent = '🗺️ ' + labelMap[activeKey];
+            }
+        }
+
+        /* ===== 方案 B：Leaflet + 天地图公开瓦片（无需Token） ===== */
+        var tdtLayers = {};
+        var tdtCurrentAnno = null;
+        var tdtCurrentBase = null;
+
+        function initLeafletMap() {
+            setBadge('🗺️ 天地图 · 公开瓦片（矢量）', '#6bc5ff');
+
+            map = L.map('mapDiv', {
+                center: [29.5, 114.5],
+                zoom: 7,
+                zoomControl: true,
+                attributionControl: false
+            });
+
+            L.control.attribution({ prefix: false, position: 'bottomleft' })
+                .addAttribution('© 天地图 Tianditu')
+                .addTo(map);
+
+            var tk = '';
+            try {
+                var ss = document.querySelectorAll('script[src*="tianditu.gov.cn/api"]');
+                for (var i2 = 0; i2 < ss.length; i2++) {
+                    if (ss[i2].src.indexOf('tk=')>0) {
+                        tk = ss[i2].src.split('tk=')[1].split('&')[0];
+                        if (tk.indexOf('YOUR_') === 0) tk = '';
+                        if (tk.length < 8) tk = '';
+                        break;
+                    }
+                }
+            } catch(e){ tk = ''; }
+
+            var tdtTk = tk || '26ca9594e63a6e3ba8e0e56d8a0277e6';
+            var subds = ['t0','t1','t2','t3','t4','t5','t6','t7'];
+            var qs = (tk ? ('&tk=' + encodeURIComponent(tk)) : '');
+
+            tdtLayers.vec = L.layerGroup([
+                L.tileLayer('https://{s}.tianditu.gov.cn/DataServer?T=vec_w&x={x}&y={y}&l={z}' + qs,
+                    { subdomains: subds, maxZoom: 18, minZoom: 3, crossOrigin: true }),
+                L.tileLayer('https://{s}.tianditu.gov.cn/DataServer?T=cva_w&x={x}&y={y}&l={z}' + qs,
+                    { subdomains: subds, maxZoom: 18, minZoom: 3, pane: 'overlayPane', crossOrigin: true })
+            ]);
+            tdtLayers.img = L.layerGroup([
+                L.tileLayer('https://{s}.tianditu.gov.cn/DataServer?T=img_w&x={x}&y={y}&l={z}' + qs,
+                    { subdomains: subds, maxZoom: 18, minZoom: 3, crossOrigin: true }),
+                L.tileLayer('https://{s}.tianditu.gov.cn/DataServer?T=cia_w&x={x}&y={y}&l={z}' + qs,
+                    { subdomains: subds, maxZoom: 18, minZoom: 3, pane: 'overlayPane', crossOrigin: true })
+            ]);
+            tdtLayers.ter = L.layerGroup([
+                L.tileLayer('https://{s}.tianditu.gov.cn/DataServer?T=ter_w&x={x}&y={y}&l={z}' + qs,
+                    { subdomains: subds, maxZoom: 18, minZoom: 3, crossOrigin: true }),
+                L.tileLayer('https://{s}.tianditu.gov.cn/DataServer?T=cta_w&x={x}&y={y}&l={z}' + qs,
+                    { subdomains: subds, maxZoom: 18, minZoom: 3, pane: 'overlayPane', crossOrigin: true })
+            ]);
+
+            /* ===== 备用底图（天地图不通时使用） ===== */
+            tdtLayers.osm = L.layerGroup([
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    subdomains: 'abc', maxZoom: 19, minZoom: 3,
+                    attribution: '© OpenStreetMap'
+                })
+            ]);
+            tdtLayers.amapVec = L.layerGroup([
+                L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+                    subdomains: '1234', maxZoom: 18, minZoom: 3,
+                    attribution: '© 高德地图 AutoNavi'
+                })
+            ]);
+            tdtLayers.amapImg = L.layerGroup([
+                L.tileLayer('https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}', {
+                    subdomains: '1234', maxZoom: 18, minZoom: 3,
+                    attribution: '© 高德卫星'
+                }),
+                L.tileLayer('https://webst0{s}.is.autonavi.com/appmaptile?style=8&x={x}&y={y}&z={z}', {
+                    subdomains: '1234', maxZoom: 18, minZoom: 3, pane: 'overlayPane'
+                })
+            ]);
+
+            showSwitches();
+            /* 绑定所有切换按钮 */
+            document.querySelectorAll('.swbtn').forEach(function(b){
+                b.addEventListener('click', function(){ switchBase(b.getAttribute('data-k')); });
+            });
+
+            /* 监控瓦片加载：若天地图 4 秒内瓦片错误 > 2 就自动切到高德 */
+            var errCount = 0;
+            var fallbackTriggered = false;
+            function attachErrGuard(layer) {
+                try {
+                    layer.on && layer.on('tileerror', function() {
+                        errCount++;
+                        if (!fallbackTriggered && errCount >= 3) {
+                            fallbackTriggered = true;
+                            setBadge('⚠️ 天地图瓦片被拦截 · 自动切高德·矢量', '#e74c3c');
+                            switchBase('amapVec');
+                        }
+                    });
+                    layer.on && layer.on('load', function() {
+                        if (!fallbackTriggered && tdtCurrentBase === 'vec') {
+                            setBadge('✅ 天地图·公开瓦片（矢量）', '#6ee7a3');
+                        }
+                    });
+                } catch(e){}
+            }
+
+            Object.keys(tdtLayers).forEach(function(k) {
+                tdtLayers[k].eachLayer && tdtLayers[k].eachLayer(function(l){ attachErrGuard(l); });
+            });
+
+            /* 默认首选：高德矢量（国内网络最稳，没有 Token 限制也能直接出中文底图） */
+            tdtLayers.amapVec.addTo(map);
+            tdtCurrentBase = 'amapVec';
+            styleActiveSwitch('amapVec');
+            setBadge('🗺️ 高德·矢量（推荐，无需 Token）', '#6bc5ff');
+
+            /* 8.5 秒后如果高德瓦片还没加载，尝试 OSM */
+            setTimeout(function(){
+                if (!fallbackTriggered) {
+                    try {
+                        var tiles = document.querySelectorAll('#mapDiv img.leaflet-tile');
+                        var loaded = 0;
+                        for (var i = 0; i < tiles.length; i++) {
+                            if (tiles[i].complete && tiles[i].naturalWidth >= 20) loaded++;
+                        }
+                        if (loaded < 2) {
+                            fallbackTriggered = true;
+                            setBadge('⚠️ 高德超时 · 切换 OSM 通用底图', '#e74c3c');
+                            switchBase('osm');
+                        }
+                    } catch(e){}
+                }
+            }, 9000);
+
+            /* ===== Leaflet 版 Marker / Polyline / InfoWindow 封装（保持原 API 行为）===== */
+            map.__engine = 'leaflet';
+            map.__markers = {};
+            map.__infoWindows = {};
+
+            Object.keys(towers).forEach(function(key) {
+                addTowerMarkerLeaflet(key);
+            });
+            drawYangtzeCurveLeaflet();
+            addDistanceMarkersLeaflet();
+
+            setTimeout(function(){ chapters[0].fly(); }, 400);
+            bindScroll();
+        }
+
+        function switchBase(name) {
+            if (!tdtLayers[name]) return;
+            Object.keys(tdtLayers).forEach(function(k){ if (map.hasLayer(tdtLayers[k])) map.removeLayer(tdtLayers[k]); });
+            tdtLayers[name].addTo(map);
+            tdtCurrentBase = name;
+            styleActiveSwitch(name);
+        }
+
+        function addTowerMarkerLeaflet(key) {
+            var t = towers[key];
+            var iconUrl = makePngIcon(t);
+            var icon = L.icon({
+                iconUrl: iconUrl, iconSize: [40, 58], iconAnchor: [20, 58]
+            });
+            var m = L.marker([t.lat, t.lng], { icon: icon }).addTo(map);
+            var html = getInfoContent(key);
+            m.bindPopup(html, { maxWidth: 320, closeButton: true, offset: [0, -58], className: 'tower-popup' });
+            markers[key] = {
+                openInfoWindow: function(){ m.openPopup(); },
+                closeInfoWindow: function(){ m.closePopup(); },
+                _leaflet_marker: m
+            };
+            infoWindows[key] = { opened: false };
+            m.on('click', function(){
+                var idx = {hhl:1,yyl:2,twg:3}[key];
+                setActiveChapter(idx);
+            });
+        }
+
+        function drawYangtzeCurveLeaflet() {
+            var yyl = [towers.yyl.lat, towers.yyl.lng];
+            var hhl = [towers.hhl.lat, towers.hhl.lng];
+            var twg = [towers.twg.lat, towers.twg.lng];
+            var c1 = bezierLL(yyl, hhl, [30.3, 113.6]);
+            var c2 = bezierLL(hhl, twg, [29.9, 115.3]);
+            var all = c1.concat(c2.slice(1));
+
+            L.polyline(all, { color: '#f5a623', weight: 10, opacity: 0.2 }).addTo(map);
+            L.polyline(all, { color: '#f5a623', weight: 5, opacity: 0.95 }).addTo(map);
+            L.polyline(all, { color: '#e74c3c', weight: 2, opacity: 0.6, dashArray: '6 8' }).addTo(map);
+        }
+
+        function bezierLL(start, end, control) {
+            var pts = [], steps = 60;
+            for (var i = 0; i <= steps; i++) {
+                var t = i/steps;
+                var lat = (1-t)*(1-t)*start[0] + 2*(1-t)*t*control[0] + t*t*end[0];
+                var lng = (1-t)*(1-t)*start[1] + 2*(1-t)*t*control[1] + t*t*end[1];
+                pts.push([lat, lng]);
+            }
+            return pts;
+        }
+
+        function addDistanceMarkersLeaflet() {
+            [{lat:30.05, lng:113.85, text:'约 200 km'},
+             {lat:29.55, lng:115.10, text:'约 260 km'}].forEach(function(it){
+                var icon = L.icon({
+                    iconUrl: makeDistancePng(it.text),
+                    iconSize: [132, 38], iconAnchor: [66, 19]
+                });
+                L.marker([it.lat, it.lng], { icon: icon, interactive: false }).addTo(map);
+            });
+        }
+
+        /* ===== 统一 showAllTowers / flyToTower（两套引擎通用） ===== */
+        function showAllTowers(silent) {
+            if (!map) return;
+            closeAllInfoWindows();
+            if (map.__engine === 'leaflet') {
+                var b = L.latLngBounds(Object.values(towers).map(function(t){ return [t.lat, t.lng]; }));
+                map.fitBounds(b.pad(0.5), { maxZoom: 9, duration: 0.9 });
+                setTimeout(function(){
+                    Object.keys(markers).forEach(function(k){ markers[k].openInfoWindow(); });
+                }, 1000);
+            } else {
+                var pts = Object.values(towers).map(function(t){ return new T.LngLat(t.lng, t.lat); });
+                var minLng = Math.min.apply(null, pts.map(function(p){return p.getLng();}));
+                var maxLng = Math.max.apply(null, pts.map(function(p){return p.getLng();}));
+                var minLat = Math.min.apply(null, pts.map(function(p){return p.getLat();}));
+                var maxLat = Math.max.apply(null, pts.map(function(p){return p.getLat();}));
+                var cLng = (minLng+maxLng)/2, cLat = (minLat+maxLat)/2;
+                var span = Math.max(maxLng-minLng, maxLat-minLat)*1.3;
+                var zoom = Math.round(8 - Math.log(span)/Math.log(2));
+                zoom = Math.max(6, Math.min(10, zoom));
+                map.centerAndZoom(new T.LngLat(cLng, cLat), zoom);
+                setTimeout(function(){
+                    Object.keys(markers).forEach(function(k){ markers[k].openInfoWindow(infoWindows[k]); });
+                }, 450);
+            }
+            if (!silent) setActiveChapter(4);
+        }
+
+        function flyToTower(key, silent) {
+            if (!towers[key]) return;
+            closeAllInfoWindows();
+            var t = towers[key];
+            if (map.__engine === 'leaflet') {
+                map.flyTo([t.lat, t.lng], 12, { duration: 1.1 });
+                setTimeout(function(){ markers[key].openInfoWindow(); }, 1200);
+            } else {
+                map.centerAndZoom(new T.LngLat(t.lng, t.lat), 12);
+                setTimeout(function(){ markers[key].openInfoWindow(infoWindows[key]); }, 550);
+            }
+            if (!silent) {
+                var idx = {hhl:1, yyl:2, twg:3}[key];
+                if (idx !== undefined) setActiveChapter(idx);
+            }
+        }
+
+        /* ===== 按钮单击：切底图（Token版时简化为 setMapType） ===== */
+        function bindSwitcherForTianditu() {
+            showSwitches();
+            document.getElementById('btnSwVec').addEventListener('click', function(){
+                if (map && map.setMapType) try { map.setMapType(TMAP_NORMAL_MAP); switchVisual('vec'); } catch(e){}
+            });
+            document.getElementById('btnSwImg').addEventListener('click', function(){
+                if (map && map.setMapType) try { map.setMapType(TMAP_SATELLITE_MAP); switchVisual('img'); } catch(e){}
+            });
+            document.getElementById('btnSwTer').addEventListener('click', function(){
+                if (map && map.setMapType) try { map.setMapType(TMAP_TERRAIN_MAP); switchVisual('ter'); } catch(e){}
+            });
+            switchVisual('vec');
+        }
+        function switchVisual(name) {
+            ['Vec','Img','Ter'].forEach(function(s, i){
+                var btn = document.getElementById('btnSw' + s);
+                if (!btn) return;
+                var keyArr = ['vec','img','ter'];
+                btn.style.borderColor = (name === keyArr[i]) ? '#f5a623' : 'rgba(255,255,255,.15)';
+                btn.style.color = (name === keyArr[i]) ? '#f5a623' : '#fff';
+                btn.style.fontWeight = (name === keyArr[i]) ? '700' : '500';
+            });
+            var labels = { vec:'矢量', img:'影像', ter:'地形' };
+            var badge = document.getElementById('mapModeBadge');
+            if (badge && badge.textContent.indexOf('Token')>=0) {
+                badge.textContent = '✅ 天地图 · Token 授权版 · ' + labels[name];
+            }
+        }
+
+        /* ===== Init 路由 ===== */
+        window.addEventListener('load', function(){
+            addBasemapSwitcher();
+            var tryCount = 0;
+            var timer = setInterval(function(){
+                tryCount++;
+                if (typeof T !== 'undefined' && T.Map) {
+                    clearInterval(timer);
+                    var tk = '';
+                    try {
+                        var ss = document.querySelectorAll('script[src*="tianditu.gov.cn/api"]');
+                        for (var i = 0; i < ss.length; i++) {
+                            if (ss[i].src.indexOf('tk=')>0) { tk = ss[i].src.split('tk=')[1].split('&')[0]; break; }
+                        }
+                    } catch(e){}
+                    if (!tk || tk === '' || tk.indexOf('YOUR_') === 0 || tk.length < 8) {
+                        setBadge('⚠️ 未配置 Token · 使用公开瓦片底图', '#f5a623');
+                        initLeafletMap();
+                        return;
+                    }
+                    try {
+                        setBadge('🗺️ 使用 Token 加载天地图…', '#6ee7a3');
+                        initMap();
+                        var loaded = false;
+                        try {
+                            map.addEventListener && map.addEventListener('load', function(){ loaded = true; });
+                        } catch(e){}
+                        setTimeout(function(){
+                            if (!loaded) {
+                                document.getElementById('mapDiv').innerHTML = '';
+                                setBadge('⚠️ Token版超时 · 已切公开瓦片', '#f5a623');
+                                initLeafletMap();
+                            } else {
+                                setBadge('✅ 天地图 · Token 授权版 · 矢量', '#6ee7a3');
+                                bindSwitcherForTianditu();
+                            }
+                        }, 6500);
+                    } catch (e) {
+                        document.getElementById('mapDiv').innerHTML = '';
+                        setBadge('⚠️ Token版报错 · 切公开瓦片', '#f5a623');
+                        initLeafletMap();
+                    }
+                    return;
+                }
+                if (tryCount > 35) {
+                    clearInterval(timer);
+                    setBadge('⚠️ JSAPI 失败 · 使用公开瓦片底图', '#f5a623');
+                    initLeafletMap();
+                }
+            }, 180);
+        });
     </script>
 </body>
 </html>
